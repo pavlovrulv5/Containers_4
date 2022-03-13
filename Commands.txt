@@ -1,0 +1,138 @@
+kubectl cluster-info
+
+Kubernetes control plane is running at https://192.168.49.2:8443
+CoreDNS is running at https://192.168.49.2:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+-----
+
+kubectl get node
+
+NAME       STATUS   ROLES                  AGE     VERSION
+minikube   Ready    control-plane,master   2d19h   v1.23.3
+
+-----
+
+kubectl create ns test
+
+namespace/test created
+
+-----
+
+kubectl config set-context --current --namespace=test
+
+Context "minikube" modified.
+
+-----
+
+kubectl get storageclasses.storage.k8s.io
+
+------
+
+vi pvc.yaml
+
+-----
+
+kubectl apply -f pvc.yaml
+
+-----
+
+kubectl get pvc
+
+-----
+
+kubectl create secret generic test-secret --from-literal=PASS=testpassword
+
+-----
+
+kubectl get secret test-secret
+
+-----
+
+kubectl get secret test-secret -oyaml
+
+apiVersion: v1
+data:
+  PASS: dGVzdHBhc3N3b3Jk
+kind: Secret
+metadata:
+  creationTimestamp: "2022-03-13T17:47:06Z"
+  name: test-secret
+  namespace: test
+  resourceVersion: "10907"
+  uid: f8a35a3a-2f32-42ad-b06d-23e083ea826e
+type: Opaque
+
+-----
+
+vi deployment.yaml
+
+-----
+
+kubectl apply -f deployment.yaml
+
+-----
+
+kubectl get po
+
+NAME                    READY   STATUS    RESTARTS   AGE
+pg-db-7949d4bdc-wkb7m   0/1     Pending   0          15s
+
+-----
+
+kubectl describe po pg-db-7949d4bdc-wkb7m
+
+Events:
+  Type     Reason            Age                 From               Message
+  ----     ------            ----                ----               -------
+  Warning  FailedScheduling  22s (x2 over 103s)  default-scheduler  0/1 nodes are available: 1 pod has unbound immediate PersistentVolumeClaims.
+
+-----
+
+kubectl get po
+NAME                    READY   STATUS    RESTARTS   AGE
+pg-db-7949d4bdc-dl2tg   0/1     Pending   0          12m
+test                    1/1     Running   0          12m
+
+-----
+
+kubectl get pod -o wide
+
+NAME                    READY   STATUS    RESTARTS   AGE   IP           NODE       NOMINATED NODE   READINESS GATES
+pg-db-7949d4bdc-dl2tg   0/1     Pending   0          14m   <none>       <none>     <none>           <none>
+test                    1/1     Running   0          13m   172.17.0.3   minikube   <none>           <none>
+
+-----
+
+kubectl run -t -i --rm --image postgres:10.13 test bash
+
+If you don't see a command prompt, try pressing enter.
+root@test:/#
+
+-----
+
+psql -h 172.17.0.3 -U testuser testdatabase
+Password for user testuser:
+psql (10.13 (Debian 10.13-1.pgdg90+1))
+Type "help" for help.
+
+testdatabase=#
+
+-----
+
+testdatabase=# CREATE TABLE testtable (testcolumn VARCHAR (50) );
+
+CREATE TABLE
+
+-----
+
+testdatabase=# \dt
+
+-----
+
+kubectl delete po test
+
+pod "test" deleted
+
+-----
+
+далее повторяем создание
